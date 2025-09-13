@@ -1,7 +1,8 @@
 # ChitraKatha-AI-Storyteller
-End-to-end AI pipeline to generate children-friendly animated cultural story videos from simple text prompts
+End-to-end AI pipeline to generate children-friendly animated cultural story videos from simple text prompts.
+<img width="1892" height="916" alt="image" src="https://github.com/user-attachments/assets/0369e99c-9f25-43c6-91a5-cc7eb8b28cf1" />
 
-# Problem Statement
+## Problem Statement
 In today’s digital age, where children are glued to cartoons like Cocomelon, there is a need
 for content that not only entertains but also nurtures young minds. The project aims to
 educate these nascent minds through engaging stories that provide a positive moral learning
@@ -10,7 +11,7 @@ simple idea and turn it into a complete animated story. By doing so, we can make
 for anyone, from parents to educators to creators, to share vibrant cultural stories with
 children in a way that is fun, meaningful, and impactful.
 
-Tools & Technologies
+## Tools & Technologies
 Language & Reasoning- Google Gemini 2.5 Flash API
 
 Image Generation- Hugging Face Inference API (for FLUX.1 [schnell])
@@ -23,7 +24,7 @@ Backend & API Server- Gradio
 
 Frontend UI- Custom built HTML, CSS, and JavaScript
 
-# Key features
+## Key features
 Multi-lingual narration
 
 Custom story tones (Bedtime, Playtime, Educational)
