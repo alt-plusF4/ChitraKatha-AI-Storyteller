@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="tab logo.png">
+    <title>ChitraKatha</title>
+    <style>
+        /* --- Google Fonts Import --- */
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&family=Playfair+Display:wght@600&display=swap');
+
+        /* --- General Body & Scrollbar Styling --- */
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        /* --- Section 1: Hero Banner --- */
+        #hero-section {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            padding: 2rem;
+            background-image: url("image2.png");
+            background-color: rgba(0, 0, 0, 0.55); /* Dark overlay */
+            background-blend-mode: overlay;
+            background-size: cover;
+            background-position: center;
+            overflow: hidden; /* So glow stays inside */
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 4.2rem;
+            left: 5rem;
+        }
+        #logo-img {
+            width: 50px; /* Adjust size as needed */
+            height: auto;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Moving glow overlay */
+        #hero-section::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(
+                circle at var(--x, 50%) var(--y, 0%),
+                rgba(255, 255, 255, 0.15) 10%,
+                rgba(255, 255, 255, 0.05) 20%,
+                rgba(0, 0, 0, 0.8) 70%
+            );
+            mix-blend-mode: overlay; /* Reveals mandala under the dark overlay */
+            pointer-events: none;
+        }
+
+        .hero-title-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        #dynamic-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 8vw;
+            margin: 0.2em;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .hero-subtitle {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5vw;
+            color: #959595;
+            margin-top: 0.5rem;
+        }
+
+        .hero-subtitle:hover {
+            color: #ed0331;
+        }
+
+        .hero-intro {
+            max-width: 600px;
+            margin-top: 2rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #d0d0d0;
+            font-weight: 400;
+        }
+
+        /* --- Section 2 & 3: Shared Styles --- */
+        #input-section, #output-section {
+            min-height: 100vh;
+            padding: 5rem 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border-top: 1px solid;
+            border-image-source: linear-gradient(to right, #000000, #393939, #000000);
+            border-image-slice: 1;
+        }
+
+        .app-container {
+            display: flex;
+            gap: 4.6rem;
+            width: 100%;
+            max-width: 1100px;
+            align-items: flex-start;
+        }
+
+        .input-box {
+            flex: 2;
+            background: rgba(10, 10, 10, 0.5); /* Transparent dark glass */
+            backdrop-filter: blur(32px) saturate(180%);
+            -webkit-backdrop-filter: blur(32px) saturate(180%);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); /* Depth shadow */
+            position: relative;
+        }
+        .input-box::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            background: radial-gradient(circle at left top, rgba(255,255,255,0.15), transparent 45%);
+            pointer-events: none; /* Prevents blocking clicks */
+        }
+
+        .input-inner-box {
+            background-color: #1f1f1f;
+            border-radius: 15px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .input-inner-box label {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: #d0d0d0;
+        }
+
+        .input-inner-box textarea, .input-inner-box select {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: white;
+            padding: 0.8rem;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 1rem;
+        }
+        
+        .input-inner-box textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .start-button {
+            background-color: #ed0331;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem;
+            font-size: 1rem;
+            font-weight: 200;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .start-button:hover {
+            background-color: #ff4769;
+        }
+
+        .features-box {
+            flex: 1;
+        }
+
+        .features-box h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            margin-top: 0;
+            color: #ed0331;
+        }
+
+        .features-box p {
+            font-weight: 300;
+            line-height: 1.2;
+            color: #b0b0b0;
+        }
+
+        #output-section {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+        }
+        
+        .output-container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(10, 10, 10, 0.5); /* Transparent dark glass */
+            backdrop-filter: blur(32px) saturate(180%);
+            -webkit-backdrop-filter: blur(32px) saturate(180%);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4); /* Depth shadow */
+            position: relative;
+        }
+        
+        .output-container h2 {
+            font-family: 'Playfair Display', serif;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        #video-player {
+            width: 100%;
+            border-radius: 10px;
+            background-color: #000;
+        }
+
+        #story-text {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        
+        /* --- NEW: Advanced Options Styling --- */
+        #advanced-toggle {
+            font-size: 0.9rem; color: #a0a0a0; cursor: pointer; text-decoration: underline; margin-top: -1rem;
+            text-align: right;
+        }
+        #advanced-options {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <section id="hero-section">
+        <div class="logo-container">
+            <img src="logo.png" alt="ChitraKatha Logo" style="width: 50px; height: auto;">
+        </div>
+        <div class="hero-title-container">
+            <h1 id="dynamic-title">ChitraKatha</h1>
+        </div>
+        <h2 class="hero-subtitle">Your AI Storyteller Companion</h2>
+        <p class="hero-intro">
+            ChitraKatha is your digital storyteller, rooted in India’s timeless tradition of tales with a purpose. It transforms ideas into vibrant narratives where imagination meets values - leaving every viewer with more than just a story.
+        </p>
+    </section>
+
+    <section id="input-section">
+        <div class="app-container">
+            <div class="features-box">
+                <h3>Features</h3>
+                <p>
+                    <strong>Multi-lingual Storytelling</strong><br>Blend Hindi, English, or regional languages seamlessly.<br><br>
+                    <strong>Culturally Rich Narratives:</strong><br>Stories grounded in Indian history and folklore.<br><br>
+                    <strong>Animated Visuals:</strong><br>Dynamic video output with expressive narration and crisp subtitles.<br><br>
+                    <strong>Adaptive Storytone:</strong><br>Stories adapt tone and complexity for bedtime, playtime, or learning.<br><br>
+                    <strong>Positive Life Lessons:</strong><br>Every story ends with a clear moral or uplifting takeaway for children.<br><br>
+            </div>
+            <div class="input-box">
+                <div class="input-inner-box">
+                    <label for="prompt-input">Enter a Simple Story Idea</label>
+                    <textarea id="prompt-input"></textarea>
+                    
+                    <label for="lang-select">Select Language</label>
+                    <select id="lang-select">
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi</option>
+                        <option value="Marathi">Marathi</option>
+                        <option value="Kannada">Kannada</option>
+                        <option value="Punjabi">Punjabi</option>
+                    </select>
+
+                    <!-- NEW: Advanced Options Toggle and Container -->
+                    <div id="advanced-toggle">Advanced Options ▼</div>
+                    <div id="advanced-options">
+                        <label for="tone-select">Select Story Tone</label>
+                        <select id="tone-select">
+                            <option value="Default">Default</option>
+                            <option value="Bedtime">Bedtime (Soothing)</option>
+                            <option value="Playtime">Playtime (Adventurous)</option>
+                            <option value="Educational">Educational (Informative)</option>
+                        </select>
+                    </div>
+
+                    <button class="start-button" id="start-btn">Let’s Create!</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="output-section">
+        <div class="output-container">
+            <h2>Your Story</h2>
+            <video id="video-player" controls></video>
+            <div id="story-text"></div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dynamicTitle = document.getElementById('dynamic-title');
+            const startBtn = document.getElementById('start-btn');
+            const outputSection = document.getElementById('output-section');
+            const logoImg = document.getElementById('logo-img');
+            const promptInput = document.getElementById('prompt-input');
+            const advancedToggle = document.getElementById('advanced-toggle');
+            const advancedOptions = document.getElementById('advanced-options');
+
+            // --- 1. Dynamic Placeholder Text ---
+            const placeholders = [
+                "A story about a kind elephant in a jungle...",
+                "A magical tale about a floating city in the clouds...",
+                "A funny story about a monkey who loves to paint...",
+                "An adventurous story of two friends exploring an old fort...",
+                "A wise tale about the importance of honesty..."
+            ];
+            let placeholderIndex = 0;
+            promptInput.placeholder = placeholders[0]; // Set initial placeholder
+            setInterval(() => {
+                placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+                promptInput.placeholder = placeholders[placeholderIndex];
+            }, 5000); // Change every 5 seconds
+
+            // --- 2. Dynamic Title Animation ---
+            const titles = ['ChitraKatha', 'चित्रकथा', 'ಚಿತ್ರಕಥೆ', 'ਕਾਰਟੂਨ ਕਹਾਣੀ'];
+            let titleIndex = 0;
+            function changeTitle() {
+                setTimeout(() => {
+                    dynamicTitle.style.opacity = 0;
+                }, 150);
+                setTimeout(() => {
+                    titleIndex = (titleIndex + 1) % titles.length;
+                    dynamicTitle.textContent = titles[titleIndex];
+                    dynamicTitle.style.opacity = 1;
+                    setTimeout(changeTitle, 2000);
+                }, 400);
+            }
+            setTimeout(changeTitle, 1500);
+
+            // --- 3. Advanced Options Toggle ---
+            advancedToggle.addEventListener('click', () => {
+                const isHidden = advancedOptions.style.display === 'none';
+                advancedOptions.style.display = isHidden ? 'flex' : 'none';
+                advancedToggle.textContent = isHidden ? 'Advanced Options ▲' : 'Advanced Options ▼';
+            });
+
+            // --- 4. Button Click and Scrolling ---
+            startBtn.addEventListener('click', () => {
+                const prompt = promptInput.value;
+                const language = document.getElementById('lang-select').value;
+                let tone = document.getElementById('tone-select').value;
+                
+                if (tone === 'Default') {
+                    tone = null; // Send null if default is selected
+                }
+
+                if (!prompt) { alert('Please enter a story idea.'); return; }
+                outputSection.style.display = 'flex';
+                outputSection.scrollIntoView({ behavior: 'smooth' });
+                submitPrompt(prompt, language, tone);
+            });
+
+            // --- 5. API Submission (Live) ---
+            function submitPrompt(prompt, language, tone) {
+                const videoPlayer = document.getElementById('video-player');
+                const storyTextDiv = document.getElementById('story-text');
+                const startBtn = document.getElementById('start-btn');
+
+                storyTextDiv.textContent = 'Your story is being crafted by the AI... Please wait.';
+                videoPlayer.src = '';
+                startBtn.disabled = true;
+                startBtn.textContent = 'Crafting...';
+
+                // --- Step 1: Update API URL to live Hugging Face Space ---
+                const gradio_api_url = 'https://huggingface.co/spaces/aarsh28/ChitraKatha/api/predict/';
+
+                fetch(gradio_api_url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [prompt, language, tone] })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // --- Step 2: Use the returned video path directly ---
+                    const videoPath = data.data[0];  // Gradio API returns video file path
+                    const storyText = data.data[1];
+
+                    videoPlayer.src = videoPath; 
+                    storyTextDiv.textContent = storyText;
+                    startBtn.disabled = false;
+                    startBtn.textContent = 'Let’s Create!';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    storyTextDiv.textContent = 'An error occurred. Please check the console and ensure the backend is live.';
+                    startBtn.disabled = false;
+                    startBtn.textContent = 'Let’s Create!';
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
