@@ -1,0 +1,6 @@
+moviepy
+gradio
+google-generativeai
+elevenlabs
+numpy
+requests
