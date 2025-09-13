@@ -253,6 +253,31 @@
             gap: 1.5rem;
         }
 
+        #progress-container {
+            width: 100%;
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            display: none; /* Hidden by default */
+        }
+        #progress-bar {
+            width: 0%;
+            height: 20px;
+            background-color: #ed0331;
+            transition: width 0.5s ease-in-out;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            font-size: 0.8rem;
+        }
+        #progress-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            color: #d0d0d0;
+            font-family: 'Open Sans', sans-serif;
+        }
+
     </style>
 </head>
 <body>
@@ -314,9 +339,14 @@
 
     <section id="output-section">
         <div class="output-container">
-            <h2>Your Story</h2>
-            <video id="video-player" controls></video>
-            <div id="story-text"></div>
+            <h2 id="output-title">Your Story Is Being Crafted...</h2>
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            <div id="progress-text">Initializing...</div>
+            
+            <video id="video-player" controls style="display:none;"></video>
+            <div id="story-text" style="display:none;"></div>
         </div>
     </section>
 
@@ -329,8 +359,13 @@
             const promptInput = document.getElementById('prompt-input');
             const advancedToggle = document.getElementById('advanced-toggle');
             const advancedOptions = document.getElementById('advanced-options');
-
-            // --- 1. Dynamic Placeholder Text ---
+            const outputTitle = document.getElementById('output-title');
+            const progressContainer = document.getElementById('progress-container');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const videoPlayer = document.getElementById('video-player');
+            const storyTextDiv = document.getElementById('story-text');
+            
             const placeholders = [
                 "A story about a kind elephant in a jungle...",
                 "A magical tale about a floating city in the clouds...",
@@ -345,7 +380,6 @@
                 promptInput.placeholder = placeholders[placeholderIndex];
             }, 5000); // Change every 5 seconds
 
-            // --- 2. Dynamic Title Animation ---
             const titles = ['ChitraKatha', 'चित्रकथा', 'ಚಿತ್ರಕಥೆ', 'ਕਾਰਟੂਨ ਕਹਾਣੀ'];
             let titleIndex = 0;
             function changeTitle() {
@@ -361,14 +395,12 @@
             }
             setTimeout(changeTitle, 1500);
 
-            // --- 3. Advanced Options Toggle ---
             advancedToggle.addEventListener('click', () => {
                 const isHidden = advancedOptions.style.display === 'none';
                 advancedOptions.style.display = isHidden ? 'flex' : 'none';
                 advancedToggle.textContent = isHidden ? 'Advanced Options ▲' : 'Advanced Options ▼';
             });
 
-            // --- 4. Button Click and Scrolling ---
             startBtn.addEventListener('click', () => {
                 const prompt = promptInput.value;
                 const language = document.getElementById('lang-select').value;
@@ -384,41 +416,62 @@
                 submitPrompt(prompt, language, tone);
             });
 
-            // --- 5. API Submission (Live) ---
-            function submitPrompt(prompt, language, tone) {
-                const videoPlayer = document.getElementById('video-player');
-                const storyTextDiv = document.getElementById('story-text');
-                const startBtn = document.getElementById('start-btn');
 
-                storyTextDiv.textContent = 'Your story is being crafted by the AI... Please wait.';
+
+            async function submitPrompt(prompt, language, tone) {
+                // --- Reset the UI for a new run ---
+                storyTextDiv.style.display = 'none';
+                videoPlayer.style.display = 'none';
                 videoPlayer.src = '';
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressBar.textContent = '';
+                progressText.textContent = 'Connecting to the AI...';
+                outputTitle.textContent = 'Your Story Is Being Crafted...';
                 startBtn.disabled = true;
                 startBtn.textContent = 'Crafting...';
+                
+                const gradio_api_base_url = 'https://huggingface.co/spaces/aarsh28/ChitraKatha';
 
-                const gradio_api_base_url = 'https://aarsh28-chitrakatha.hf.space/';
+                try {
+                    const app = await client(gradio_api_base_url);
+                    const job = app.submit("/generate_story", {
+                        data: [prompt, language, tone]
+                    });
 
-                fetch(gradio_api_url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [prompt, language, tone] })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // --- Step 2: Use the returned video path directly ---
-                    const videoPath = data.data[0];  // Gradio API returns video file path
-                    const storyText = data.data[1];
+                    job.on("status", (status) => {
+                        if (status.stage === "progress") {
+                            const progress = status.progress_data[0].progress || 0;
+                            const desc = status.progress_data[0].desc || 'Working...';
+                            const progressPercent = Math.round(progress * 100);
+                            
+                            progressBar.style.width = `${progressPercent}%`;
+                            progressBar.textContent = `${progressPercent}%`;
+                            progressText.textContent = desc;
+                        }
+                    });
 
-                    videoPlayer.src = videoPath; 
-                    storyTextDiv.textContent = storyText;
-                    startBtn.disabled = false;
-                    startBtn.textContent = 'Let’s Create!';
-                })
-                .catch(error => {
+                    const result = await job; // Wait for the final result
+                    if (result.type === "data") {
+                        const videoPath = result.data[0].name;
+                        const storyText = result.data[1];
+                        
+                        videoPlayer.src = `${gradio_api_base_url}/file=${videoPath}`;
+                        storyTextDiv.textContent = storyText;
+                        
+                        outputTitle.textContent = 'Your Story Is Ready!';
+                        progressContainer.style.display = 'none';
+                        videoPlayer.style.display = 'block';
+                        storyTextDiv.style.display = 'block';
+                    }
+
+                } catch (error) {
                     console.error('Error:', error);
-                    storyTextDiv.textContent = 'An error occurred. Please check the console and ensure the backend is live.';
+                    progressText.textContent = 'An error occurred. The backend may be waking up, please try again in a minute.';
+                } finally {
                     startBtn.disabled = false;
                     startBtn.textContent = 'Let’s Create!';
-                });
+                }
             }
         });
     </script>
@@ -426,6 +479,7 @@
 </body>
 
 </html>
+
 
 
 
