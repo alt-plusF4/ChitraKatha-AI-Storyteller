@@ -322,61 +322,100 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const dynamicTitle = document.getElementById('dynamic-title');
             const startBtn = document.getElementById('start-btn');
             const outputSection = document.getElementById('output-section');
+            const logoImg = document.getElementById('logo-img');
             const promptInput = document.getElementById('prompt-input');
             const advancedToggle = document.getElementById('advanced-toggle');
             const advancedOptions = document.getElementById('advanced-options');
-            
+
+            // --- 1. Dynamic Placeholder Text ---
+            const placeholders = [
+                "A story about a kind elephant in a jungle...",
+                "A magical tale about a floating city in the clouds...",
+                "A funny story about a monkey who loves to paint...",
+                "An adventurous story of two friends exploring an old fort...",
+                "A wise tale about the importance of honesty..."
+            ];
+            let placeholderIndex = 0;
+            promptInput.placeholder = placeholders[0]; // Set initial placeholder
+            setInterval(() => {
+                placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+                promptInput.placeholder = placeholders[placeholderIndex];
+            }, 5000); // Change every 5 seconds
+
+            // --- 2. Dynamic Title Animation ---
+            const titles = ['ChitraKatha', 'चित्रकथा', 'ಚಿತ್ರಕಥೆ', 'ਕਾਰਟੂਨ ਕਹਾਣੀ'];
+            let titleIndex = 0;
+            function changeTitle() {
+                setTimeout(() => {
+                    dynamicTitle.style.opacity = 0;
+                }, 150);
+                setTimeout(() => {
+                    titleIndex = (titleIndex + 1) % titles.length;
+                    dynamicTitle.textContent = titles[titleIndex];
+                    dynamicTitle.style.opacity = 1;
+                    setTimeout(changeTitle, 2000);
+                }, 400);
+            }
+            setTimeout(changeTitle, 1500);
+
+            // --- 3. Advanced Options Toggle ---
             advancedToggle.addEventListener('click', () => {
                 const isHidden = advancedOptions.style.display === 'none';
                 advancedOptions.style.display = isHidden ? 'flex' : 'none';
                 advancedToggle.textContent = isHidden ? 'Advanced Options ▲' : 'Advanced Options ▼';
             });
-    
+
+            // --- 4. Button Click and Scrolling ---
             startBtn.addEventListener('click', () => {
                 const prompt = promptInput.value;
                 const language = document.getElementById('lang-select').value;
-                const tone = document.getElementById('tone-select').value;
+                let tone = document.getElementById('tone-select').value;
                 
+                if (tone === 'Default') {
+                    tone = null; // Send null if default is selected
+                }
+
                 if (!prompt) { alert('Please enter a story idea.'); return; }
                 outputSection.style.display = 'flex';
                 outputSection.scrollIntoView({ behavior: 'smooth' });
                 submitPrompt(prompt, language, tone);
             });
-    
+
+            // --- 5. API Submission (Live) ---
             function submitPrompt(prompt, language, tone) {
                 const videoPlayer = document.getElementById('video-player');
                 const storyTextDiv = document.getElementById('story-text');
-                storyTextDiv.textContent = 'Connecting to the AI... Please wait.';
+                const startBtn = document.getElementById('start-btn');
+
+                storyTextDiv.textContent = 'Your story is being crafted by the AI... Please wait.';
                 videoPlayer.src = '';
                 startBtn.disabled = true;
                 startBtn.textContent = 'Crafting...';
 
-                const gradio_api_base_url = 'https://aarsh28-chitrakatha.hf.space/'; 
-    
-                fetch(`${gradio_api_base_url}/api/generate_story`, {
+                const gradio_api_base_url = 'https://aarsh28-chitrakatha.hf.space/';
+
+                fetch(gradio_api_url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ data: [prompt, language, tone] })
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.error) {
-                        storyTextDiv.textContent = `An error occurred: ${data.error}`;
-                    } else {
-                        const videoPath = data.data[0].name;
-                        const storyText = data.data[1];
-                        // Construct the correct URL to access the generated file on the Gradio server
-                        videoPlayer.src = `${gradio_api_base_url}/file=${videoPath}`;
-                        storyTextDiv.textContent = storyText;
-                    }
+                    // --- Step 2: Use the returned video path directly ---
+                    const videoPath = data.data[0];  // Gradio API returns video file path
+                    const storyText = data.data[1];
+
+                    videoPlayer.src = videoPath; 
+                    storyTextDiv.textContent = storyText;
                     startBtn.disabled = false;
                     startBtn.textContent = 'Let’s Create!';
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    storyTextDiv.textContent = 'An error occurred. Please check the browser console and ensure the backend is running.';
+                    storyTextDiv.textContent = 'An error occurred. Please check the console and ensure the backend is live.';
                     startBtn.disabled = false;
                     startBtn.textContent = 'Let’s Create!';
                 });
@@ -387,5 +426,6 @@
 </body>
 
 </html>
+
 
 
