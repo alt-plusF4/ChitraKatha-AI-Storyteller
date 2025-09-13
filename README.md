@@ -1,5 +1,4 @@
 # ChitraKatha-AI-Storyteller
-End-to-end AI pipeline to generate children-friendly animated cultural story videos from simple text prompts.
 <img width="1892" height="916" alt="image" src="https://github.com/user-attachments/assets/0369e99c-9f25-43c6-91a5-cc7eb8b28cf1" />
 
 ## Problem Statement
