@@ -368,6 +368,35 @@
         const videoPlayer = document.getElementById('video-player');
         const storyTextDiv = document.getElementById('story-text');
     
+        // Add a diagnostics panel if not present
+        let diagnosticsDiv = document.getElementById('diagnostics');
+        if (!diagnosticsDiv) {
+          diagnosticsDiv = document.createElement('div');
+          diagnosticsDiv.id = 'diagnostics';
+          diagnosticsDiv.style.fontFamily = 'monospace';
+          diagnosticsDiv.style.whiteSpace = 'pre-wrap';
+          diagnosticsDiv.style.margin = '10px 0';
+          diagnosticsDiv.style.maxHeight = '200px';
+          diagnosticsDiv.style.overflow = 'auto';
+          diagnosticsDiv.style.background = '#111';
+          diagnosticsDiv.style.color = '#eee';
+          diagnosticsDiv.style.padding = '8px';
+          diagnosticsDiv.style.borderRadius = '6px';
+          // append after output section if available, else to body
+          (outputSection && outputSection.parentNode || document.body).appendChild(diagnosticsDiv);
+        }
+    
+        function logDiag(...args) {
+          console.log(...args);
+          try {
+            diagnosticsDiv.textContent += args.map(a => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ') + '\n';
+            diagnosticsDiv.scrollTop = diagnosticsDiv.scrollHeight;
+          } catch (e) {
+            diagnosticsDiv.textContent += String(args) + '\n';
+          }
+        }
+    
+        // rotating placeholders
         const placeholders = [
           "A story about a kind elephant in a jungle...",
           "A magical tale about a floating city in the clouds...",
@@ -376,15 +405,17 @@
           "A wise tale about the importance of honesty..."
         ];
         let placeholderIndex = 0;
-        promptInput.placeholder = placeholders[0];
+        if (promptInput) promptInput.placeholder = placeholders[0];
         setInterval(() => {
           placeholderIndex = (placeholderIndex + 1) % placeholders.length;
-          promptInput.placeholder = placeholders[placeholderIndex];
+          if (promptInput) promptInput.placeholder = placeholders[placeholderIndex];
         }, 5000);
     
+        // dynamic multi-language title
         const titles = ['ChitraKatha', 'चित्रकथा', 'ಚಿತ್ರಕಥೆ', 'ਕਾਰਟੂਨ ਕਹਾਣੀ'];
         let titleIndex = 0;
         function changeTitle() {
+          if (!dynamicTitle) return;
           setTimeout(() => { dynamicTitle.style.opacity = 0; }, 150);
           setTimeout(() => {
             titleIndex = (titleIndex + 1) % titles.length;
@@ -395,121 +426,164 @@
         }
         setTimeout(changeTitle, 1500);
     
-        advancedToggle.addEventListener('click', () => {
-          const isHidden = advancedOptions.style.display === 'none';
-          advancedOptions.style.display = isHidden ? 'flex' : 'none';
-          advancedToggle.textContent = isHidden ? 'Advanced Options ▲' : 'Advanced Options ▼';
-        });
+        // advanced toggle
+        if (advancedToggle) {
+          advancedToggle.addEventListener('click', () => {
+            const isHidden = advancedOptions.style.display === 'none';
+            advancedOptions.style.display = isHidden ? 'flex' : 'none';
+            advancedToggle.textContent = isHidden ? 'Advanced Options ▲' : 'Advanced Options ▼';
+          });
+        }
     
-        startBtn.addEventListener('click', () => {
-          const prompt = promptInput.value;
-          const language = document.getElementById('lang-select').value;
-          let tone = document.getElementById('tone-select').value;
-          if (tone === 'Default') tone = null;
-          if (!prompt) { alert('Please enter a story idea.'); return; }
-          outputSection.style.display = 'flex';
-          outputSection.scrollIntoView({ behavior: 'smooth' });
-          submitPrompt(prompt, language, tone);
-        });
+        // start button
+        if (startBtn) {
+          startBtn.addEventListener('click', () => {
+            const prompt = (promptInput && promptInput.value) || '';
+            const langEl = document.getElementById('lang-select');
+            const toneEl = document.getElementById('tone-select');
+            const language = langEl ? langEl.value : 'English';
+            let tone = toneEl ? toneEl.value : 'Default';
+            if (tone === 'Default') tone = null;
+            if (!prompt) { alert('Please enter a story idea.'); return; }
+            if (outputSection) outputSection.style.display = 'flex';
+            outputSection && outputSection.scrollIntoView({ behavior: 'smooth' });
+            submitPrompt(prompt, language, tone);
+          });
+        }
     
-        // ----- CONFIG: change only this if your space id is different -----
+        // ---- CONFIG: change only this block if your space id or token vary ----
         const SPACE_ID = "aarsh28/ChitraKatha"; // format: "username/space-name"
-        // If your Space is private, put your HF token here (NEVER commit it to public code).
-        const HF_TOKEN = null; // e.g. "hf_xxx..." or null for public spaces
-        // ------------------------------------------------------------------
+        const HF_TOKEN = null; // set "hf_xxx..." if space is private (don't commit tokens)
+        // -----------------------------------------------------------------------
     
         async function submitPrompt(prompt, language, tone) {
           // Reset UI
-          storyTextDiv.style.display = 'none';
-          videoPlayer.style.display = 'none';
-          videoPlayer.src = '';
+          try {
+            storyTextDiv.style.display = 'none';
+            videoPlayer.style.display = 'none';
+            videoPlayer.src = '';
+          } catch {}
+    
           progressContainer.style.display = 'block';
           progressBar.style.width = '0%';
           progressBar.textContent = '';
           progressText.textContent = 'Connecting to the AI...';
           outputTitle.textContent = 'Your Story Is Being Crafted...';
-          startBtn.disabled = true;
-          startBtn.textContent = 'Crafting...';
+          if (startBtn) { startBtn.disabled = true; startBtn.textContent = 'Crafting...'; }
     
+          diagnosticsDiv.textContent = '';
+          logDiag('[client] Starting request to', SPACE_ID, 'HF_TOKEN?', !!HF_TOKEN);
+    
+          // quick HTTP reachability test (OPTIONS) so we can see CORS / basic network issues
           try {
-            // Connect to the Gradio app (uses websocket under the hood)
+            const optionsUrl = `https://huggingface.co/spaces/${SPACE_ID}/api/predict/`;
+            logDiag('[diagnostic] OPTIONS ->', optionsUrl);
+            const oResp = await fetch(optionsUrl, { method: 'OPTIONS' });
+            logDiag('[diagnostic] OPTIONS status', oResp.status, oResp.statusText);
+          } catch (err) {
+            logDiag('[diagnostic] OPTIONS failed:', err);
+          }
+    
+          // Attempt Gradio client connection and submit
+          try {
             const clientOptions = HF_TOKEN ? { hf_token: HF_TOKEN } : {};
+            logDiag('[client] Connecting via Gradio client...');
             const app = await Client.connect(SPACE_ID, clientOptions);
+            logDiag('[client] Connected:', app);
     
-            // submit to your named API endpoint "/generate_story"
-            // payload structure: { data: [...] } or simply an array depending on client version
+            // submit to API name defined in your gradio app
             const submission = app.submit("/generate_story", { data: [prompt, language, tone] });
+            logDiag('[client] Submission created, listening for events...');
     
-            // submission is an async iterator that yields status and data events
-            for await (const event of submission) {
-              if (event.type === "status") {
-                // status updates often include progress_data array with progress + desc
-                const pd = (event.progress_data && event.progress_data[0]) || {};
+            // async iterator yields events: status, data, etc.
+            for await (const ev of submission) {
+              logDiag('[event]', ev);
+    
+              if (ev.type === 'status') {
+                // some builds use progress_data array
+                const pd = (ev.progress_data && ev.progress_data[0]) || {};
                 const progress = Math.round((pd.progress || 0) * 100);
-                const desc = pd.desc || event.msg || "Working...";
+                const desc = pd.desc || ev.msg || 'Working...';
                 progressBar.style.width = `${progress}%`;
                 progressBar.textContent = `${progress}%`;
                 progressText.textContent = desc;
               }
     
-              if (event.type === "data") {
-                // final or partial data event; event.data is an array matching your gradio outputs
-                const returned = event.data || [];
-                // Expect: [video_file_or_path_or_url, story_text]
+              if (ev.type === 'data') {
+                logDiag('[client] Received data', ev.data);
+                const returned = ev.data || [];
                 const maybeVideo = returned[0];
-                const storyText = returned[1] || "";
+                const storyText = returned[1] || '';
     
-                // Determine a usable URL for the video:
-                // - If Gradio returned an object with a `name` property (file stored on the Space),
-                //   we can fetch via the Space's file route: "https://huggingface.co/spaces/{SPACE}/file={name}"
-                // - If it looks like a full URL, use it directly.
-                let videoUrl = "";
+                let videoUrl = '';
                 if (maybeVideo) {
-                  if (typeof maybeVideo === "string") {
-                    if (maybeVideo.startsWith("http://") || maybeVideo.startsWith("https://")) {
+                  if (typeof maybeVideo === 'string') {
+                    if (maybeVideo.startsWith('http://') || maybeVideo.startsWith('https://')) {
                       videoUrl = maybeVideo;
                     } else {
-                      // treat as file name from the space
                       videoUrl = `https://huggingface.co/spaces/${SPACE_ID}/file=${encodeURIComponent(maybeVideo)}`;
                     }
                   } else if (maybeVideo.name) {
                     videoUrl = `https://huggingface.co/spaces/${SPACE_ID}/file=${encodeURIComponent(maybeVideo.name)}`;
                   } else if (maybeVideo.url) {
                     videoUrl = maybeVideo.url;
+                  } else {
+                    // fallback: stringify
+                    logDiag('[client] Unhandled video response shape:', maybeVideo);
                   }
                 }
     
-                // update UI with final outputs
                 if (videoUrl) {
                   videoPlayer.src = videoUrl;
                   videoPlayer.style.display = 'block';
+                } else {
+                  logDiag('[client] No usable video URL returned by backend.');
                 }
+    
                 storyTextDiv.textContent = storyText;
                 storyTextDiv.style.display = 'block';
     
                 outputTitle.textContent = 'Your Story Is Ready!';
                 progressContainer.style.display = 'none';
-    
-                // We break after handling final data; if your backend streams multiple final data events,
-                // remove this break to handle them as they come.
-                break;
+                progressText.textContent = 'Completed';
+                break; // stop listening unless you expect multiple final events
               }
-            } // end for-await-of submission
-    
+            } // end for-await-of
           } catch (err) {
-            console.error("Submission error:", err);
-            progressText.textContent = 'An error occurred while contacting the backend. Check console or try again.';
+            logDiag('[client] Error during submission:', err);
+    
+            // Try HTTP POST fallback so we can capture raw HTTP response
+            try {
+              const fallbackUrl = `https://huggingface.co/spaces/${SPACE_ID}/api/predict/`;
+              logDiag('[fallback] POST ->', fallbackUrl);
+              const headers = { 'Content-Type': 'application/json' };
+              if (HF_TOKEN) headers['Authorization'] = `Bearer ${HF_TOKEN}`;
+              const body = { data: [prompt, language, tone] };
+    
+              const resp = await fetch(fallbackUrl, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(body)
+              });
+              const text = await resp.text();
+              logDiag('[fallback] status:', resp.status, resp.statusText);
+              logDiag('[fallback] body (truncated):', text.slice(0, 2000));
+              progressText.textContent = `Backend HTTP fallback status: ${resp.status}. See diagnostics.`;
+            } catch (fallbackErr) {
+              logDiag('[fallback] POST failed:', fallbackErr);
+              progressText.textContent = 'An error occurred while contacting the backend. See diagnostics.';
+            }
           } finally {
-            startBtn.disabled = false;
-            startBtn.textContent = 'Let’s Create!';
+            if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Let’s Create!'; }
           }
-        }
+        } // end submitPrompt
       });
     </script>
 
 </body>
 
 </html>
+
 
 
 
