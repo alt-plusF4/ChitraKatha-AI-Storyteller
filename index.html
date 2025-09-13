@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="tab logo.png">
+    <link rel="icon" href="assests/tab logo.png">
     <title>ChitraKatha</title>
     <style>
         /* --- Google Fonts Import --- */
@@ -31,7 +31,7 @@
             height: 100vh;
             text-align: center;
             padding: 2rem;
-            background-image: url("image2.png");
+            background-image: url("assests/bg.png");
             background-color: rgba(0, 0, 0, 0.55); /* Dark overlay */
             background-blend-mode: overlay;
             background-size: cover;
@@ -242,14 +242,13 @@
             white-space: pre-wrap;
             line-height: 1.6;
         }
-        
-        /* --- NEW: Advanced Options Styling --- */
+
         #advanced-toggle {
             font-size: 0.9rem; color: #a0a0a0; cursor: pointer; text-decoration: underline; margin-top: -1rem;
             text-align: right;
         }
         #advanced-options {
-            display: none; /* Hidden by default */
+            display: none;
             flex-direction: column;
             gap: 1.5rem;
         }
@@ -260,7 +259,7 @@
 
     <section id="hero-section">
         <div class="logo-container">
-            <img src="logo.png" alt="ChitraKatha Logo" style="width: 50px; height: auto;">
+            <img src="assets/logo.png" alt="ChitraKatha Logo" style="width: 50px; height: auto;">
         </div>
         <div class="hero-title-container">
             <h1 id="dynamic-title">ChitraKatha</h1>
@@ -296,7 +295,6 @@
                         <option value="Punjabi">Punjabi</option>
                     </select>
 
-                    <!-- NEW: Advanced Options Toggle and Container -->
                     <div id="advanced-toggle">Advanced Options ▼</div>
                     <div id="advanced-options">
                         <label for="tone-select">Select Story Tone</label>
@@ -427,4 +425,5 @@
     </script>
 
 </body>
+
 </html>
