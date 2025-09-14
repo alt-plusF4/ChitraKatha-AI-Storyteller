@@ -476,7 +476,7 @@
     
           // quick HTTP reachability test (OPTIONS) so we can see CORS / basic network issues
           try {
-            const optionsUrl = `https://huggingface.co/spaces/${SPACE_ID}/api/predict/`;
+            const optionsUrl = `https://huggingface.co/spaces/${SPACE_ID}/api/generate_story/`;
             logDiag('[diagnostic] OPTIONS ->', optionsUrl);
             const oResp = await fetch(optionsUrl, { method: 'OPTIONS' });
             logDiag('[diagnostic] OPTIONS status', oResp.status, oResp.statusText);
@@ -583,6 +583,7 @@
 </body>
 
 </html>
+
 
 
 
