@@ -553,7 +553,7 @@
     
             // Try HTTP POST fallback so we can capture raw HTTP response
             try {
-              const fallbackUrl = `https://huggingface.co/spaces/${SPACE_ID}/api/predict/`;
+              const fallbackUrl = `https://huggingface.co/spaces/${SPACE_ID}/api/generate_story/`;
               logDiag('[fallback] POST ->', fallbackUrl);
               const headers = { 'Content-Type': 'application/json' };
               if (HF_TOKEN) headers['Authorization'] = `Bearer ${HF_TOKEN}`;
@@ -582,6 +582,7 @@
 </body>
 
 </html>
+
 
 
 
